@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiquiMart — Predictor de Fútbol 2026</title>
+<meta name="description" content="Predice los marcadores del torneo de fútbol 2026 y gana descuentos exclusivos en LiquiMart.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--green-mid:#9FE1CB;
+  --bg:#F8F9FA;--bg2:#FFFFFF;--bg3:#F1F3F5;
+  --text:#1A1A1A;--text2:#6B7280;--text3:#9CA3AF;
+  --border:#E5E7EB;--border2:#D1D5DB;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+a{color:var(--green-dark);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* NAV */
+.nav{background:#fff;border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{background:var(--green);color:#fff;border-radius:var(--radius-sm);padding:5px 11px;font-size:15px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:5px}
+.brand-sub{font-size:12px;color:var(--text2);padding-left:10px;border-left:1px solid var(--border)}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{padding:6px 13px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-weight:500;transition:all .15s}
+.nav-tab:hover{background:var(--bg3);color:var(--text)}
+.nav-tab.active{background:var(--bg3);color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-link{font-size:12px;color:var(--green-dark);border:1px solid var(--green-mid);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:4px;transition:background .15s}
+.nav-link:hover{background:var(--green-light);text-decoration:none}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+
+/* LAYOUT */
+.page{display:none;padding:1.25rem;max-width:760px;margin:0 auto}
+.page.active{display:block}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
+.card+.card{margin-top:.875rem}
+
+/* TYPOGRAPHY */
+.section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+h2.page-title{font-size:17px;font-weight:600;margin-bottom:3px}
+.page-sub{font-size:12px;color:var(--text2)}
+
+/* BUTTONS */
+.btn{padding:7px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:#fff;color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn:hover{background:var(--bg3)}
+.btn-primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark);border-color:var(--green-dark)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{border-color:#FCA5A5;color:#DC2626}
+.btn-danger:hover{background:#FEF2F2}
+.btn-full{width:100%;justify-content:center}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-green{background:#DCFCE7;color:#166534}
+.badge-amber{background:#FEF3C7;color:#92400E}
+.badge-blue{background:#DBEAFE;color:#1E40AF}
+.badge-gray{background:#F3F4F6;color:#4B5563}
+.badge-red{background:#FEE2E2;color:#991B1B}
+.badge-teal{background:var(--green-light);color:var(--green-dark)}
+
+/* FORMS */
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;background:#fff;color:var(--text);font-family:inherit;transition:border-color .15s}
+input:focus,select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-weight:500}
+.field{margin-bottom:.75rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+/* GRIDS */
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+/* METRICS */
+.metric{background:var(--bg3);border-radius:var(--radius-sm);padding:.875rem;text-align:center}
+.metric-val{font-size:22px;font-weight:700;color:var(--text)}
+.metric-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* TABS */
+.tab-bar{display:flex;gap:3px;background:var(--bg3);padding:3px;border-radius:var(--radius-sm);margin-bottom:1rem}
+.tab-btn{flex:1;padding:6px;font-size:12px;border:none;background:transparent;border-radius:5px;cursor:pointer;color:var(--text2);font-weight:500;font-family:inherit;transition:all .15s}
+.tab-btn.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
+
+/* MATCH CARDS */
+.match-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem;transition:border-color .15s}
+.match-card:hover{border-color:var(--border2)}
+.match-meta{font-size:11px;color:var(--text2);min-width:70px}
+.match-teams{flex:1;display:flex;align-items:center;gap:.5rem;font-size:13px;font-weight:500}
+.match-vs{font-size:11px;color:var(--text3)}
+.score-inp{width:42px;text-align:center;padding:5px 4px;font-size:13px;border-radius:var(--radius-sm)}
+.match-locked{opacity:.55;pointer-events:none;background:var(--bg3)}
+.lock-badge{font-size:10px;padding:3px 7px;background:#FEF3C7;color:#92400E;border-radius:20px;font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.group-hdr{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg3);padding:4px 8px;border-radius:var(--radius-sm);margin:1rem 0 .4rem;display:flex;align-items:center;gap:5px}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:.75rem;padding:.5rem .625rem;border-radius:var(--radius-sm);transition:background .1s}
+.lb-row:hover{background:var(--bg3)}
+.lb-me{background:#F0FDF9 !important}
+.rank-num{width:22px;text-align:center;font-size:12px;font-weight:600;color:var(--text2)}
+
+/* PRIZE TIERS */
+.prize-tier{border-left:3px solid var(--green-mid);padding:.5rem .875rem;margin-bottom:.5rem;border-radius:0 var(--radius-sm) var(--radius-sm) 0;background:var(--bg3)}
+
+/* DISCOUNT CODE */
+.disc-code{font-family:'Courier New',monospace;background:#DCFCE7;color:#166534;padding:3px 9px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;letter-spacing:.06em}
+
+/* AD CARD */
+.ad-card{background:#fff;border:1px solid var(--green-mid);border-radius:var(--radius);padding:.875rem;margin:1rem 0;display:flex;gap:.875rem;align-items:center;position:relative}
+.ad-stripe{position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--green);border-radius:3px 0 0 3px}
+.ad-img{width:54px;height:54px;background:var(--bg3);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ad-info{flex:1;min-width:0}
+.ad-label{font-size:10px;color:var(--green-dark);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.ad-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-price{font-size:12px;color:var(--green-dark);font-weight:700;margin-top:3px}
+.ad-orig{font-size:11px;color:var(--text3);text-decoration:line-through;margin-left:5px}
+
+/* CONFIG ROW */
+.cfg-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.cfg-row:last-child{border:none}
+.cfg-inp{width:75px;text-align:center}
+
+/* USER / TICKET ROW */
+.data-row{display:flex;align-items:center;gap:.75rem;padding:.5rem .25rem;border-bottom:1px solid var(--border)}
+.data-row:last-child{border:none}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);border-radius:var(--radius);padding:1.5rem;color:#fff;margin-bottom:1rem;position:relative;overflow:hidden;text-align:center}
+.hero::after{content:'⚽';position:absolute;right:1.5rem;top:50%;transform:translateY(-50%) rotate(15deg);font-size:56px;opacity:.12}
+.hero-title{font-size:17px;font-weight:700;margin-bottom:5px}
+.hero-sub{font-size:13px;opacity:.85}
+.hero-disclaimer{font-size:10px;opacity:.6;margin-top:8px}
+
+/* PILLS */
+.pills{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.875rem}
+.pill{background:#fff;border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;display:flex;align-items:center;gap:4px}
+.pill-num{font-weight:700;color:var(--green-dark)}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--green);color:#fff;padding:.75rem 1.25rem;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px}
+
+/* LOGIN */
+.login-wrap{max-width:400px;margin:2.5rem auto}
+.legal-note{font-size:11px;color:var(--text3);text-align:center;margin-top:.875rem;line-height:1.6}
+
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TICKET SECTION */
+.ticket-box{background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:1rem;margin-top:.875rem}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .nav-tabs{display:none}
+  .grid4{grid-template-columns:1fr 1fr}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-logo">⚡ LiquiMart</div>
+    <span class="brand-sub">Predictor de Fútbol</span>
+  </div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" onclick="nav('login',this)">Inicio</button>
+    <button class="nav-tab" onclick="nav('quiniela',this)">Mis predicciones</button>
+    <button class="nav-tab" onclick="nav('leaderboard',this)">Tabla</button>
+    <button class="nav-tab" id="adminTab" style="display:none;color:#1E40AF" onclick="nav('admin',this)">Admin</button>
+  </div>
+  <div class="nav-right">
+    <a href="https://www.tiendakomet.com" target="_blank" class="nav-link">🛒 Tienda online</a>
+    <div id="navUser" style="display:none;align-items:center;gap:8px">
+      <div class="avatar" id="userAvatar">?</div>
+      <span id="userName" style="font-size:13px;font-weight:500"></span>
+      <span id="userPts" style="font-size:12px;font-weight:700;color:var(--green-dark)"></span>
+      <button class="btn btn-sm" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== LOGIN ===== -->
+<div id="page-login" class="page active">
+  <div class="login-wrap">
+    <div class="hero">
+      <div class="hero-title">Predictor de Fútbol LiquiMart</div>
+      <div class="hero-sub">Adivina los marcadores y gana descuentos exclusivos</div>
+      <div class="hero-disclaimer">Promoción independiente · No afiliada con ninguna organización deportiva oficial</div>
+    </div>
+    <div class="card">
+      <div id="loginForm">
+        <div class="field"><label>Correo electrónico</label><input type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="email"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password"></div>
+        <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Entrar</button>
+        <p style="text-align:center;margin-top:.75rem;font-size:13px;color:var(--text2)">¿Sin cuenta? <a href="#" onclick="toggleForm()">Regístrate gratis</a></p>
+      </div>
+      <div id="registerForm" style="display:none">
+        <div class="field"><label>Nombre completo</label><input type="text" id="regName" placeholder="Tu nombre" autocomplete="name"></div>
+        <div class="field"><label>Correo electrónico</label><input type="email" id="regEmail" placeholder="tu@correo.com" autocomplete="email"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+        <button class="btn btn-primary btn-full" id="regBtn" onclick="doRegister()">Crear cuenta gratis</button>
+        <p style="text-align:center;margin-top:.75rem;font-size:13px;color:var(--text2)"><a href="#" onclick="toggleForm()">← Volver al login</a></p>
+      </div>
+    </div>
+    <div class="pills" id="pointPills">
+      <div class="pill"><span class="pill-num" id="pill-r">3</span> pts resultado</div>
+      <div class="pill"><span class="pill-num" id="pill-s">10</span> pts marcador exacto</div>
+      <div class="pill"><span class="pill-num" id="pill-t">5</span> pts ticket tienda</div>
+    </div>
+    <p class="legal-note">Esta es una promoción comercial de LiquiMart (Tienda Komet). No tiene afiliación con ninguna organización deportiva oficial. Los descuentos son válidos en <a href="https://www.tiendakomet.com" target="_blank">tiendakomet.com</a></p>
+  </div>
+</div>
+
+<!-- ===== QUINIELA ===== -->
+<div id="page-quiniela" class="page">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:1rem">
+    <div>
+      <h2 class="page-title">Mis predicciones</h2>
+      <p class="page-sub">Los partidos se bloquean al iniciar. Guarda antes del pitazo.</p>
+    </div>
+    <button class="btn btn-primary" id="saveBtn" onclick="savePredictions()">💾 Guardar</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="filterMatches('today',this)">Hoy</button>
+    <button class="tab-btn" onclick="filterMatches('week',this)">Esta semana</button>
+    <button class="tab-btn" onclick="filterMatches('groups',this)">Fase de grupos</button>
+    <button class="tab-btn" onclick="filterMatches('knockout',this)">Eliminatoria</button>
+  </div>
+  <div id="matchList"><p style="color:var(--text2);font-size:13px;padding:.5rem">Cargando partidos...</p></div>
+  <div id="adSlot1"></div>
+  <div class="ticket-box">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+      <span style="font-size:18px">🧾</span>
+      <span style="font-size:14px;font-weight:600;color:var(--green-dark)">Registrar compra en tienda física</span>
+    </div>
+    <p style="font-size:12px;color:var(--green-dark);margin-bottom:.75rem">Ingresa el folio de tu ticket para ganar <strong id="ticket-pts">5</strong> puntos adicionales</p>
+    <div style="display:flex;gap:.5rem">
+      <input type="text" id="ticketFolio" placeholder="Ej: TKT-2026-0091" style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="submitTicket()">Agregar</button>
+    </div>
+    <p style="font-size:11px;color:var(--green-dark);margin-top:.375rem">* Cada folio solo puede usarse una vez. El equipo lo verifica en 24hrs.</p>
+  </div>
+</div>
+
+<!-- ===== LEADERBOARD ===== -->
+<div id="page-leaderboard" class="page">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem">
+    <div>
+      <h2 class="page-title">Tabla de líderes</h2>
+      <p class="page-sub">Pública · Actualizada en tiempo real</p>
+    </div>
+    <a href="https://www.tiendakomet.com" target="_blank" class="btn btn-sm">🛍️ Ver tienda</a>
+  </div>
+  <div class="grid4" style="margin-bottom:1rem">
+    <div class="metric"><div class="metric-val" id="lb-users">—</div><div class="metric-lbl">participantes</div></div>
+    <div class="metric"><div class="metric-val" id="lb-played">—</div><div class="metric-lbl">partidos jugados</div></div>
+    <div class="metric"><div class="metric-val" id="lb-codes">—</div><div class="metric-lbl">descuentos emitidos</div></div>
+    <div class="metric"><div class="metric-val" id="lb-pct">5%</div><div class="metric-lbl">descuento diario</div></div>
+  </div>
+  <div id="adSlot2"></div>
+  <div class="card" style="margin-bottom:.875rem">
+    <div class="section-title">🏆 Líderes del torneo</div>
+    <div id="lbList"><p style="color:var(--text2);font-size:13px">Cargando...</p></div>
+  </div>
+  <div class="card" style="margin-bottom:.875rem">
+    <div class="section-title">🎁 Pirámide de premios</div>
+    <div class="prize-tier" style="border-color:#F59E0B">
+      <div style="font-size:13px;font-weight:600;color:#92400E">Campeón del torneo 🥇 · Premio mayor</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">Mayor puntos al final · Código <span id="pp-champ">20</span>% off en tienda · Válido 48hrs</div>
+    </div>
+    <div class="prize-tier" style="border-color:#9CA3AF">
+      <div style="font-size:13px;font-weight:600;color:#374151">Ganador semanal 🥈 · Top 3</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">Cada semana · Código <span id="pp-weekly">10</span>% off · Válido 48hrs</div>
+    </div>
+    <div class="prize-tier" style="border-color:#F97316">
+      <div style="font-size:13px;font-weight:600;color:#9A3412">Ganador diario 🥉</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">Mayor puntos del día · Código <span id="pp-daily">5</span>% off · Válido 48hrs</div>
+    </div>
+    <div class="prize-tier" style="border-color:#A78BFA">
+      <div style="font-size:13px;font-weight:600;color:#4C1D95">Cierre fase de grupos 🏅 · Top 5</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">Al cerrar grupos · Código <span id="pp-groups">15</span>% off · Válido 48hrs</div>
+    </div>
+  </div>
+  <div class="card" id="myCodesCard" style="display:none">
+    <div class="section-title">Mis códigos de descuento</div>
+    <div id="myCodesList"></div>
+  </div>
+  <p class="legal-note">Promoción comercial de LiquiMart · No afiliada con ninguna organización deportiva oficial · <a href="https://www.tiendakomet.com" target="_blank">tiendakomet.com</a></p>
+</div>
+
+<!-- ===== ADMIN ===== -->
+<div id="page-admin" class="page">
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+    <div style="width:34px;height:34px;background:#DBEAFE;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🛡️</div>
+    <div style="flex:1">
+      <h2 class="page-title" style="font-size:15px">Panel Admin — LiquiMart</h2>
+      <p class="page-sub">Resultados · Descuentos · Configuración</p>
+    </div>
+    <span class="badge badge-green">🟢 Supabase conectado</span>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="adminTab('results',this)">Resultados</button>
+    <button class="tab-btn" onclick="adminTab('discounts',this)">Descuentos</button>
+    <button class="tab-btn" onclick="adminTab('config',this)">Config</button>
+    <button class="tab-btn" onclick="adminTab('users',this)">Usuarios</button>
+    <button class="tab-btn" onclick="adminTab('tickets',this)">Tickets</button>
+    <button class="tab-btn" onclick="adminTab('ads',this)">Anuncios</button>
+  </div>
+
+  <!-- Results -->
+  <div id="adm-results">
+    <div class="card">
+      <div class="section-title">Ingresar resultados de hoy</div>
+      <div id="resultList"><p style="color:var(--text2);font-size:13px">Cargando...</p></div>
+      <button class="btn btn-primary" style="margin-top:.75rem" onclick="processResults()">📊 Calcular puntos y emitir descuentos del día</button>
+    </div>
+  </div>
+
+  <!-- Discounts -->
+  <div id="adm-discounts" style="display:none">
+    <div class="card" style="margin-bottom:.875rem">
+      <div class="section-title">Emitir código de descuento</div>
+      <div class="field-row">
+        <div class="field"><label>Usuario</label><select id="discUser"><option value="">Seleccionar...</option></select></div>
+        <div class="field"><label>Tipo de premio</label>
+          <select id="discType">
+            <option value="daily">Ganador diario</option>
+            <option value="weekly">Ganador semanal</option>
+            <option value="groups">Cierre fase grupos</option>
+            <option value="champion">Campeón del torneo</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="issueDiscount()">🏷️ Generar código en Shopify · Expira 48hrs</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Códigos emitidos</div>
+      <div id="issuedList"><p style="color:var(--text2);font-size:13px">Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div id="adm-config" style="display:none">
+    <div class="card">
+      <div class="section-title">Puntos y porcentajes de descuento</div>
+      <div class="cfg-row"><span style="font-size:13px">Resultado correcto (ganador/empate)</span><input class="cfg-inp" type="number" id="cfg-r" value="3" min="1"></div>
+      <div class="cfg-row"><span style="font-size:13px">Marcador exacto</span><input class="cfg-inp" type="number" id="cfg-s" value="10" min="1"></div>
+      <div class="cfg-row"><span style="font-size:13px">Ticket de compra verificado</span><input class="cfg-inp" type="number" id="cfg-t" value="5" min="1"></div>
+      <div class="cfg-row"><span style="font-size:13px">Descuento ganador diario (%)</span><input class="cfg-inp" type="number" id="cfg-d" value="5" min="1" max="100"></div>
+      <div class="cfg-row"><span style="font-size:13px">Descuento ganador semanal (%)</span><input class="cfg-inp" type="number" id="cfg-w" value="10" min="1" max="100"></div>
+      <div class="cfg-row"><span style="font-size:13px">Descuento cierre grupos (%)</span><input class="cfg-inp" type="number" id="cfg-g" value="15" min="1" max="100"></div>
+      <div class="cfg-row"><span style="font-size:13px">Descuento campeón del torneo (%)</span><input class="cfg-inp" type="number" id="cfg-c" value="20" min="1" max="100"></div>
+      <button class="btn btn-primary" style="margin-top:1rem" onclick="saveConfig()">💾 Guardar configuración</button>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div id="adm-users" style="display:none">
+    <div class="card">
+      <div class="section-title">Usuarios registrados (<span id="u-count">—</span>)</div>
+      <div id="usersList"><p style="color:var(--text2);font-size:13px">Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- Tickets -->
+  <div id="adm-tickets" style="display:none">
+    <div class="card">
+      <div class="section-title">Tickets pendientes de verificación</div>
+      <div id="ticketsList"><p style="color:var(--text2);font-size:13px">Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- Ads -->
+  <div id="adm-ads" style="display:none">
+    <div class="card">
+      <div class="section-title">Anuncios activos</div>
+      <div id="adsList"></div>
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+        <div class="section-title">Agregar producto</div>
+        <div class="field-row">
+          <div class="field"><label>Nombre del producto</label><input type="text" id="ad-name" placeholder="Ej: Pantalla LED 32&quot;"></div>
+          <div class="field"><label>Precio MXN</label><input type="number" id="ad-price" placeholder="1299"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Precio original MXN</label><input type="number" id="ad-orig" placeholder="2499"></div>
+          <div class="field"><label>Emoji</label><input type="text" id="ad-emoji" placeholder="📺" style="font-size:18px"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Mostrar en</label>
+            <select id="ad-cat">
+              <option value="all">Siempre</option>
+              <option value="quiniela">En predicciones</option>
+              <option value="leaderboard">En tabla</option>
+            </select>
+          </div>
+          <div class="field"><label>URL del producto</label><input type="url" id="ad-url" placeholder="https://tiendakomet.com/products/..."></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addAd()">➕ Agregar anuncio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// SUPABASE CONFIG
+// =============================================
+const SUPABASE_URL = 'https://aejlvxqjczvanjlyjltv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xi8v-VmAepKmcp2ICUe73Q_BVr-YebO';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// =============================================
+// STATE
+// =============================================
+let currentUser = null;
+let currentProfile = null;
+let matches = [];
+let predictions = {};
+let config = {r:3,s:10,t:5,d:5,w:10,g:15,c:20};
+let ads = [];
+
+// =============================================
+// INIT
+// =============================================
+async function init() {
+  await loadConfig();
+  updatePills();
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProfile();
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      await loadProfile();
+      nav('quiniela', document.querySelectorAll('.nav-tab')[1]);
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      currentProfile = null;
+      updateNavUser(null);
+      nav('login', document.querySelectorAll('.nav-tab')[0]);
+    }
+  });
+}
+
+async function loadConfig() {
+  const { data } = await sb.from('config').select('*');
+  if (!data) return;
+  data.forEach(row => {
+    if (row.key === 'pts_result') config.r = parseInt(row.value);
+    if (row.key === 'pts_exact_score') config.s = parseInt(row.value);
+    if (row.key === 'pts_ticket') config.t = parseInt(row.value);
+    if (row.key === 'pct_daily') config.d = parseInt(row.value);
+    if (row.key === 'pct_weekly') config.w = parseInt(row.value);
+    if (row.key === 'pct_groups') config.g = parseInt(row.value);
+    if (row.key === 'pct_champion') config.c = parseInt(row.value);
+  });
+}
+
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (data) {
+    currentProfile = data;
+    updateNavUser(data);
+    if (data.is_admin) document.getElementById('adminTab').style.display = 'inline-flex';
+    loadAds();
+  }
+}
+
+function updateNavUser(profile) {
+  const el = document.getElementById('navUser');
+  if (!profile) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  document.getElementById('userAvatar').textContent = profile.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('userName').textContent = profile.name.split(' ')[0];
+  document.getElementById('userPts').textContent = profile.points + ' pts';
+}
+
+function updatePills() {
+  document.getElementById('pill-r').textContent = config.r;
+  document.getElementById('pill-s').textContent = config.s;
+  document.getElementById('pill-t').textContent = config.t;
+  document.getElementById('ticket-pts').textContent = config.t;
+  document.getElementById('pp-daily').textContent = config.d;
+  document.getElementById('pp-weekly').textContent = config.w;
+  document.getElementById('pp-groups').textContent = config.g;
+  document.getElementById('pp-champ').textContent = config.c;
+  document.getElementById('lb-pct').textContent = config.d + '%';
+}
+
+// =============================================
+// AUTH
+// =============================================
+function toggleForm() {
+  const lf = document.getElementById('loginForm');
+  const rf = document.getElementById('registerForm');
+  lf.style.display = lf.style.display === 'none' ? 'block' : 'none';
+  rf.style.display = rf.style.display === 'none' ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { toast('Completa todos los campos', 'err'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="spinner"></span> Entrando...';
+  btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false;
+  btn.textContent = 'Entrar';
+  if (error) { toast('Correo o contraseña incorrectos', 'err'); return; }
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !email || pass.length < 6) { toast('Completa todos los campos correctamente', 'err'); return; }
+  const btn = document.getElementById('regBtn');
+  btn.innerHTML = '<span class="spinner"></span> Creando cuenta...';
+  btn.disabled = true;
+  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
+  btn.disabled = false;
+  btn.textContent = 'Crear cuenta gratis';
+  if (error) { toast(error.message, 'err'); return; }
+  toast('¡Cuenta creada! Bienvenido a LiquiMart Predictor 🎉');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+// =============================================
+// MATCHES
+// =============================================
+async function loadMatches(filter) {
+  const el = document.getElementById('matchList');
+  el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:.5rem">Cargando partidos...</p>';
+
+  let query = sb.from('matches').select('*').order('match_date').order('match_time');
+  const today = new Date().toISOString().split('T')[0];
+  const weekEnd = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+
+  if (filter === 'today') query = query.eq('match_date', today);
+  else if (filter === 'week') query = query.gte('match_date', today).lte('match_date', weekEnd);
+  else if (filter === 'groups') query = query.eq('phase', 'groups');
+  else query = query.eq('phase', 'knockout');
+
+  const { data } = await query;
+  if (!data || !data.length) {
+    el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:.5rem">No hay partidos en este periodo.</p>';
+    return;
+  }
+  matches = data;
+
+  // Load user predictions
+  if (currentUser) {
+    const ids = data.map(m => m.id);
+    const { data: preds } = await sb.from('predictions').select('*').eq('user_id', currentUser.id).in('match_id', ids);
+    predictions = {};
+    if (preds) preds.forEach(p => { predictions[p.match_id] = { h: p.home_pred, a: p.away_pred }; });
+  }
+
+  const groups = [...new Set(data.map(m => m.group_name))];
+  let html = '';
+  groups.forEach(g => {
+    html += `<div class="group-hdr">📋 Grupo ${g}</div>`;
+    data.filter(m => m.group_name === g).forEach(m => {
+      const pred = predictions[m.id] || { h: '', a: '' };
+      const locked = m.is_locked || m.is_finished;
+      const dateStr = new Date(m.match_date + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric',month:'short'});
+      html += `<div class="match-card ${locked ? 'match-locked' : ''}">
+        <div class="match-meta">${dateStr} ${m.match_time.slice(0,5)}</div>
+        <div class="match-teams"><span>${m.home_team}</span><span class="match-vs">vs</span><span>${m.away_team}</span></div>
+        ${locked
+          ? `<span class="lock-badge">🔒 ${m.is_finished && m.home_score !== null ? m.home_score+'-'+m.away_score : 'En curso'}</span>`
+          : `<input class="score-inp" type="number" min="0" max="20" placeholder="0" value="${pred.h}" data-mid="${m.id}" data-side="h">
+             <span class="match-vs">-</span>
+             <input class="score-inp" type="number" min="0" max="20" placeholder="0" value="${pred.a}" data-mid="${m.id}" data-side="a">`
+        }
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.score-inp').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const mid = parseInt(inp.dataset.mid);
+      if (!predictions[mid]) predictions[mid] = { h: '', a: '' };
+      predictions[mid][inp.dataset.side] = inp.value;
+    });
+  });
+}
+
+function filterMatches(f, btn) {
+  document.querySelectorAll('#page-quiniela .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadMatches(f);
+  renderAd('adSlot1', 'quiniela');
+}
+
+async function savePredictions() {
+  if (!currentUser) { toast('Inicia sesión primero', 'err'); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled = true;
+
+  const rows = Object.entries(predictions)
+    .filter(([, v]) => v.h !== '' && v.a !== '')
+    .map(([mid, v]) => ({
+      user_id: currentUser.id,
+      match_id: parseInt(mid),
+      home_pred: parseInt(v.h) || 0,
+      away_pred: parseInt(v.a) || 0
+    }));
+
+  if (!rows.length) { toast('No hay predicciones para guardar', 'err'); btn.innerHTML = '💾 Guardar'; btn.disabled = false; return; }
+
+  const { error } = await sb.from('predictions').upsert(rows, { onConflict: 'user_id,match_id' });
+  btn.innerHTML = '💾 Guardar';
+  btn.disabled = false;
+  if (error) { toast('Error al guardar: ' + error.message, 'err'); return; }
+  toast('✅ Predicciones guardadas correctamente');
+}
+
+// =============================================
+// TICKET
+// =============================================
+async function submitTicket() {
+  if (!currentUser) { toast('Inicia sesión primero', 'err'); return; }
+  const folio = document.getElementById('ticketFolio').value.trim().toUpperCase();
+  if (!folio) { toast('Ingresa el folio del ticket', 'err'); return; }
+  const { error } = await sb.from('tickets').insert({ user_id: currentUser.id, folio });
+  if (error) {
+    if (error.code === '23505') toast('Este folio ya fue registrado', 'err');
+    else toast('Error: ' + error.message, 'err');
+    return;
+  }
+  document.getElementById('ticketFolio').value = '';
+  toast('🧾 Ticket registrado — verificación en 24hrs');
+}
+
+// =============================================
+// LEADERBOARD
+// =============================================
+async function loadLeaderboard() {
+  const { data: profiles } = await sb.from('profiles').select('name,points').order('points', { ascending: false }).limit(20);
+  const { count: codesCount } = await sb.from('discount_codes').select('*', { count: 'exact', head: true });
+  const { count: finishedCount } = await sb.from('matches').select('*', { count: 'exact', head: true }).eq('is_finished', true);
+  const { count: userCount } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+
+  document.getElementById('lb-users').textContent = userCount || 0;
+  document.getElementById('lb-played').textContent = finishedCount || 0;
+  document.getElementById('lb-codes').textContent = codesCount || 0;
+
+  const medals = ['🥇','🥈','🥉'];
+  let html = '';
+  (profiles || []).forEach((u, i) => {
+    const isMe = currentProfile && u.name === currentProfile.name;
+    html += `<div class="lb-row ${isMe ? 'lb-me' : ''}">
+      <span class="rank-num">${i < 3 ? medals[i] : i+1}</span>
+      <div class="avatar" style="width:24px;height:24px;font-size:9px;flex-shrink:0">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div>
+      <span style="flex:1;font-size:13px;font-weight:500">${u.name}${isMe ? ' <span style="font-size:10px;color:var(--green-dark)">(tú)</span>' : ''}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--green-dark)">${u.points} pts</span>
+      ${i === 0 ? '<span class="badge badge-amber">Líder</span>' : i < 3 ? '<span class="badge badge-gray">Top 3</span>' : ''}
+    </div>`;
+  });
+  document.getElementById('lbList').innerHTML = html || '<p style="color:var(--text2);font-size:13px">Aún no hay participantes.</p>';
+
+  // My codes
+  if (currentUser) {
+    const { data: codes } = await sb.from('discount_codes').select('*').eq('user_id', currentUser.id);
+    if (codes && codes.length) {
+      document.getElementById('myCodesCard').style.display = 'block';
+      document.getElementById('myCodesList').innerHTML = codes.map(c => `
+        <div class="data-row">
+          <div style="flex:1"><span class="disc-code">${c.code}</span><span style="font-size:11px;color:var(--text2);margin-left:.5rem">${c.prize_type} · exp. ${new Date(c.expires_at).toLocaleDateString('es-MX')}</span></div>
+          <span class="badge badge-green">${c.discount_pct}% off</span>
+          <span class="badge ${c.is_used ? 'badge-gray' : 'badge-blue'}">${c.is_used ? 'Usado' : 'Activo'}</span>
+        </div>`).join('');
+    }
+  }
+}
+
+// =============================================
+// ADS
+// =============================================
+async function loadAds() {
+  const { data } = await sb.from('ads').select('*').eq('is_active', true);
+  ads = data || [];
+}
+
+function renderAd(slotId, page) {
+  const pool = ads.filter(a => a.category === 'all' || a.category === page);
+  if (!pool.length) return;
+  const ad = pool[Math.floor(Math.random() * pool.length)];
+  const pct = ad.original_price ? Math.round((1 - ad.price / ad.original_price) * 100) : 0;
+  document.getElementById(slotId).innerHTML = `
+    <div class="ad-card">
+      <div class="ad-stripe"></div>
+      <div style="position:absolute;top:6px;right:8px;font-size:10px;color:var(--text3)">Producto LiquiMart</div>
+      <div class="ad-img">${ad.emoji}</div>
+      <div class="ad-info">
+        <div class="ad-label">Oferta en tienda</div>
+        <div class="ad-name">${ad.name}</div>
+        <div class="ad-price">$${ad.price.toLocaleString('es-MX')} MXN
+          ${ad.original_price ? `<span class="ad-orig">$${ad.original_price.toLocaleString('es-MX')}</span>` : ''}
+          ${pct > 0 ? `<span class="badge badge-green" style="font-size:10px">-${pct}%</span>` : ''}
+        </div>
+      </div>
+      <a href="${ad.url}" target="_blank" class="btn btn-primary btn-sm">Ver oferta</a>
+    </div>`;
+}
+
+// =============================================
+// ADMIN — RESULTS
+// =============================================
+async function loadResultList() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('matches').select('*').eq('match_date', today).order('match_time');
+  if (!data || !data.length) {
+    document.getElementById('resultList').innerHTML = '<p style="color:var(--text2);font-size:13px">No hay partidos hoy.</p>';
+    return;
+  }
+  document.getElementById('resultList').innerHTML = data.map(m => `
+    <div class="data-row" style="gap:.5rem;background:var(--bg3);border-radius:var(--radius-sm);padding:.5rem;margin-bottom:.3rem;border:none">
+      <div style="flex:1;font-size:12px"><strong>${m.home_team}</strong> vs <strong>${m.away_team}</strong>
+        <span style="font-size:10px;color:var(--text2);margin-left:.5rem">${m.match_time.slice(0,5)}</span>
+      </div>
+      <input style="width:38px;text-align:center;padding:4px" type="number" min="0" max="20" id="rh-${m.id}" value="${m.home_score ?? ''}" placeholder="0">
+      <span style="font-size:11px;color:var(--text2)">-</span>
+      <input style="width:38px;text-align:center;padding:4px" type="number" min="0" max="20" id="ra-${m.id}" value="${m.away_score ?? ''}" placeholder="0">
+      <span class="badge ${m.is_finished ? 'badge-green' : 'badge-blue'}">${m.is_finished ? 'Finalizado' : 'Pendiente'}</span>
+    </div>`).join('');
+  window._todayMatches = data;
+}
+
+async function processResults() {
+  if (!window._todayMatches) return;
+  const updates = window._todayMatches.map(m => ({
+    id: m.id,
+    home_score: parseInt(document.getElementById('rh-'+m.id)?.value) || 0,
+    away_score: parseInt(document.getElementById('ra-'+m.id)?.value) || 0,
+    is_finished: true,
+    is_locked: true
+  }));
+
+  for (const u of updates) {
+    await sb.from('matches').update({ home_score: u.home_score, away_score: u.away_score, is_finished: true, is_locked: true }).eq('id', u.id);
+  }
+
+  // Calculate points for each user
+  const { data: preds } = await sb.from('predictions').select('*,profiles(points)').in('match_id', updates.map(u => u.id));
+  const userPoints = {};
+  if (preds) {
+    preds.forEach(p => {
+      const match = updates.find(u => u.id === p.match_id);
+      if (!match) return;
+      let pts = 0;
+      const correctResult = (p.home_pred > p.away_pred && match.home_score > match.away_score) ||
+                            (p.home_pred < p.away_pred && match.home_score < match.away_score) ||
+                            (p.home_pred === p.away_pred && match.home_score === match.away_score);
+      if (p.home_pred === match.home_score && p.away_pred === match.away_score) pts = config.s;
+      else if (correctResult) pts = config.r;
+      if (pts > 0) {
+        await sb.from('predictions').update({ points_earned: pts }).eq('id', p.id);
+        userPoints[p.user_id] = (userPoints[p.user_id] || 0) + pts;
+      }
+    });
+    for (const [uid, pts] of Object.entries(userPoints)) {
+      const { data: prof } = await sb.from('profiles').select('points').eq('id', uid).single();
+      if (prof) await sb.from('profiles').update({ points: prof.points + pts }).eq('id', uid);
+    }
+  }
+
+  // Issue daily discount to leader
+  const { data: top } = await sb.from('profiles').select('*').order('points', { ascending: false }).limit(1).single();
+  if (top) {
+    const code = 'LIQM-' + top.name.split(' ')[0].toUpperCase().slice(0,6) + '-D-' + Math.random().toString(36).substr(2,5).toUpperCase();
+    const expires = new Date(Date.now() + 48*60*60*1000).toISOString();
+    await sb.from('discount_codes').insert({ code, user_id: top.id, prize_type: 'daily', discount_pct: config.d, expires_at: expires });
+    toast(`✅ Puntos calculados. Código ${config.d}% emitido para ${top.name}`);
+  } else {
+    toast('Puntos calculados correctamente');
+  }
+  loadResultList();
+}
+
+// =============================================
+// ADMIN — DISCOUNTS
+// =============================================
+async function loadDiscounts() {
+  const { data: users } = await sb.from('profiles').select('id,name,points').order('points', { ascending: false });
+  const sel = document.getElementById('discUser');
+  sel.innerHTML = '<option value="">Seleccionar usuario...</option>';
+  (users || []).forEach(u => sel.innerHTML += `<option value="${u.id}">${u.name} (${u.points} pts)</option>`);
+
+  const { data: codes } = await sb.from('discount_codes').select('*,profiles(name)').order('created_at', { ascending: false }).limit(50);
+  document.getElementById('issuedList').innerHTML = (codes || []).length
+    ? codes.map(c => `
+      <div class="data-row">
+        <div style="flex:1"><span class="disc-code">${c.code}</span><span style="font-size:11px;color:var(--text2);margin-left:.5rem">${c.profiles?.name} · ${c.prize_type}</span></div>
+        <span class="badge badge-green">${c.discount_pct}% off</span>
+        <span style="font-size:11px;color:var(--text2)">${new Date(c.expires_at).toLocaleDateString('es-MX')}</span>
+        <span class="badge ${c.is_used ? 'badge-gray' : 'badge-blue'}">${c.is_used ? 'Usado' : 'Activo'}</span>
+      </div>`).join('')
+    : '<p style="color:var(--text2);font-size:13px">Sin códigos emitidos.</p>';
+}
+
+async function issueDiscount() {
+  const uid = document.getElementById('discUser').value;
+  const type = document.getElementById('discType').value;
+  if (!uid) { toast('Selecciona un usuario', 'err'); return; }
+  const { data: user } = await sb.from('profiles').select('name').eq('id', uid).single();
+  if (!user) return;
+  const pctMap = { daily: config.d, weekly: config.w, groups: config.g, champion: config.c };
+  const code = 'LIQM-' + user.name.split(' ')[0].toUpperCase().slice(0,6) + '-' + type.slice(0,3).toUpperCase() + '-' + Math.random().toString(36).substr(2,5).toUpperCase();
+  const expires = new Date(Date.now() + 48*60*60*1000).toISOString();
+  const { error } = await sb.from('discount_codes').insert({ code, user_id: uid, prize_type: type, discount_pct: pctMap[type], expires_at: expires });
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  toast(`🏷️ Código ${pctMap[type]}% generado para ${user.name} · Válido 48hrs`);
+  loadDiscounts();
+}
+
+// =============================================
+// ADMIN — CONFIG
+// =============================================
+async function loadAdminConfig() {
+  document.getElementById('cfg-r').value = config.r;
+  document.getElementById('cfg-s').value = config.s;
+  document.getElementById('cfg-t').value = config.t;
+  document.getElementById('cfg-d').value = config.d;
+  document.getElementById('cfg-w').value = config.w;
+  document.getElementById('cfg-g').value = config.g;
+  document.getElementById('cfg-c').value = config.c;
+}
+
+async function saveConfig() {
+  config.r = parseInt(document.getElementById('cfg-r').value) || 3;
+  config.s = parseInt(document.getElementById('cfg-s').value) || 10;
+  config.t = parseInt(document.getElementById('cfg-t').value) || 5;
+  config.d = parseInt(document.getElementById('cfg-d').value) || 5;
+  config.w = parseInt(document.getElementById('cfg-w').value) || 10;
+  config.g = parseInt(document.getElementById('cfg-g').value) || 15;
+  config.c = parseInt(document.getElementById('cfg-c').value) || 20;
+
+  const updates = [
+    { key: 'pts_result', value: String(config.r) },
+    { key: 'pts_exact_score', value: String(config.s) },
+    { key: 'pts_ticket', value: String(config.t) },
+    { key: 'pct_daily', value: String(config.d) },
+    { key: 'pct_weekly', value: String(config.w) },
+    { key: 'pct_groups', value: String(config.g) },
+    { key: 'pct_champion', value: String(config.c) },
+  ];
+  for (const u of updates) await sb.from('config').upsert(u, { onConflict: 'key' });
+  updatePills();
+  toast('💾 Configuración guardada');
+}
+
+// =============================================
+// ADMIN — USERS
+// =============================================
+async function loadUsers() {
+  const { data, count } = await sb.from('profiles').select('*', { count: 'exact' }).order('points', { ascending: false });
+  document.getElementById('u-count').textContent = count || 0;
+  document.getElementById('usersList').innerHTML = (data || []).map((u, i) => `
+    <div class="data-row">
+      <div class="avatar" style="width:26px;height:26px;font-size:9px;flex-shrink:0">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:500">#${i+1} ${u.name}</div><div style="font-size:11px;color:var(--text2)">${u.email}</div></div>
+      <span class="badge badge-teal">${u.points} pts</span>
+      ${u.is_admin ? '<span class="badge badge-blue">Admin</span>' : ''}
+    </div>`).join('') || '<p style="color:var(--text2);font-size:13px">Sin usuarios.</p>';
+}
+
+// =============================================
+// ADMIN — TICKETS
+// =============================================
+async function loadTickets() {
+  const { data } = await sb.from('tickets').select('*,profiles(name)').eq('status', 'pending').order('created_at', { ascending: false });
+  document.getElementById('ticketsList').innerHTML = (data || []).length
+    ? data.map(t => `
+      <div class="data-row" style="flex-wrap:wrap;gap:.5rem">
+        <div style="flex:1;min-width:150px"><span style="font-size:13px;font-weight:500">${t.folio}</span><span style="font-size:11px;color:var(--text2);margin-left:.5rem">${t.profiles?.name}</span></div>
+        <div style="display:flex;gap:.375rem">
+          <button class="btn btn-primary btn-sm" onclick="verifyTicket('${t.id}','${t.user_id}')">✅ +${config.t} pts</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectTicket('${t.id}')">✗ Rechazar</button>
+        </div>
+      </div>`).join('')
+    : '<p style="color:var(--text2);font-size:13px">Sin tickets pendientes. ✅</p>';
+}
+
+async function verifyTicket(tid, uid) {
+  await sb.from('tickets').update({ status: 'verified', points_awarded: config.t }).eq('id', tid);
+  const { data: prof } = await sb.from('profiles').select('points,name').eq('id', uid).single();
+  if (prof) {
+    await sb.from('profiles').update({ points: prof.points + config.t }).eq('id', uid);
+    toast(`✅ Ticket verificado · +${config.t} pts para ${prof.name}`);
+  }
+  loadTickets();
+}
+
+async function rejectTicket(tid) {
+  await sb.from('tickets').update({ status: 'rejected' }).eq('id', tid);
+  toast('Ticket rechazado');
+  loadTickets();
+}
+
+// =============================================
+// ADMIN — ADS
+// =============================================
+async function loadAdminAds() {
+  const { data } = await sb.from('ads').select('*').order('created_at', { ascending: false });
+  document.getElementById('adsList').innerHTML = (data || []).map(a => `
+    <div class="data-row">
+      <span style="font-size:20px">${a.emoji}</span>
+      <div style="flex:1"><div style="font-size:12px;font-weight:500">${a.name}</div><div style="font-size:11px;color:var(--text2)">$${a.price.toLocaleString()} MXN · ${a.category}</div></div>
+      <span class="badge ${a.is_active ? 'badge-green' : 'badge-gray'}">${a.is_active ? 'Activo' : 'Pausado'}</span>
+      <button class="btn btn-sm" onclick="toggleAd(${a.id},${a.is_active})">${a.is_active ? 'Pausar' : 'Activar'}</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteAd(${a.id})">🗑</button>
+    </div>`).join('') || '<p style="color:var(--text2);font-size:13px">Sin anuncios.</p>';
+}
+
+async function addAd() {
+  const name = document.getElementById('ad-name').value.trim();
+  const price = parseInt(document.getElementById('ad-price').value) || 0;
+  const orig = parseInt(document.getElementById('ad-orig').value) || null;
+  const emoji = document.getElementById('ad-emoji').value.trim() || '📦';
+  const cat = document.getElementById('ad-cat').value;
+  const url = document.getElementById('ad-url').value.trim() || 'https://www.tiendakomet.com';
+  if (!name || !price) { toast('Ingresa nombre y precio', 'err'); return; }
+  await sb.from('ads').insert({ name, price, original_price: orig, emoji, category: cat, url });
+  toast('Anuncio agregado');
+  ['ad-name','ad-price','ad-orig','ad-emoji','ad-url'].forEach(id => document.getElementById(id).value = '');
+  loadAdminAds();
+  loadAds();
+}
+
+async function toggleAd(id, current) {
+  await sb.from('ads').update({ is_active: !current }).eq('id', id);
+  loadAdminAds();
+  loadAds();
+}
+
+async function deleteAd(id) {
+  await sb.from('ads').delete().eq('id', id);
+  toast('Anuncio eliminado');
+  loadAdminAds();
+  loadAds();
+}
+
+// =============================================
+// NAVIGATION
+// =============================================
+function nav(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (page === 'quiniela') { loadMatches('today'); renderAd('adSlot1', 'quiniela'); }
+  if (page === 'leaderboard') { loadLeaderboard(); renderAd('adSlot2', 'leaderboard'); }
+  if (page === 'admin') loadResultList();
+}
+
+function adminTab(tab, btn) {
+  ['results','discounts','config','users','tickets','ads'].forEach(t => {
+    document.getElementById('adm-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'discounts') loadDiscounts();
+  if (tab === 'config') loadAdminConfig();
+  if (tab === 'users') loadUsers();
+  if (tab === 'tickets') loadTickets();
+  if (tab === 'ads') loadAdminAds();
+}
+
+// =============================================
+// TOAST
+// =============================================
+let toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type === 'err' ? '#DC2626' : 'var(--green)';
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.style.display = 'none', 3500);
+}
+
+// =============================================
+// MOBILE NAV (bottom bar for small screens)
+// =============================================
+function buildMobileNav() {
+  if (window.innerWidth > 600) return;
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100';
+  [['login','🏠','Inicio'],['quiniela','⚽','Predecir'],['leaderboard','🏆','Tabla']].forEach(([page, ico, lbl]) => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'flex:1;padding:8px 4px;border:none;background:transparent;font-size:11px;color:var(--text2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit';
+    btn.innerHTML = `<span style="font-size:18px">${ico}</span>${lbl}`;
+    btn.onclick = () => nav(page, null);
+    bar.appendChild(btn);
+  });
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = '56px';
+}
+
+// =============================================
+// START
+// =============================================
+init();
+buildMobileNav();
+</script>
+</body>
+</html>
