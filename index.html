@@ -763,9 +763,9 @@ async function processResults() {
   const { data: preds } = await sb.from('predictions').select('*,profiles(points)').in('match_id', updates.map(u => u.id));
   const userPoints = {};
   if (preds) {
-    preds.forEach(p => {
+    for (const p of preds) {
       const match = updates.find(u => u.id === p.match_id);
-      if (!match) return;
+      if (!match) continue;
       let pts = 0;
       const correctResult = (p.home_pred > p.away_pred && match.home_score > match.away_score) ||
                             (p.home_pred < p.away_pred && match.home_score < match.away_score) ||
@@ -776,7 +776,7 @@ async function processResults() {
         await sb.from('predictions').update({ points_earned: pts }).eq('id', p.id);
         userPoints[p.user_id] = (userPoints[p.user_id] || 0) + pts;
       }
-    });
+    }
     for (const [uid, pts] of Object.entries(userPoints)) {
       const { data: prof } = await sb.from('profiles').select('points').eq('id', uid).single();
       if (prof) await sb.from('profiles').update({ points: prof.points + pts }).eq('id', uid);
