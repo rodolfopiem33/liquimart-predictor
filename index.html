@@ -612,25 +612,32 @@ function filterMatches(f, btn) {
 async function savePredictions() {
   if (!currentUser) { toast('Inicia sesión primero', 'err'); return; }
   const btn = document.getElementById('saveBtn');
-  btn.innerHTML = '<span class="spinner"></span> Guardando...';
-  btn.disabled = true;
-
+  
   const rows = Object.entries(predictions)
-    .filter(([, v]) => v.h !== '' && v.a !== '')
+    .filter(([, v]) => v.h !== '' && v.a !== '' && v.h !== '0' || v.h === '0' && v.a !== '' || v.h !== '' && v.a === '0')
+    .filter(([, v]) => v.h !== '' || v.a !== '')
     .map(([mid, v]) => ({
       user_id: currentUser.id,
       match_id: parseInt(mid),
       home_pred: parseInt(v.h) || 0,
       away_pred: parseInt(v.a) || 0
-    }));
+    }))
+    .filter(r => !isNaN(r.match_id));
 
-  if (!rows.length) { toast('No hay predicciones para guardar', 'err'); btn.innerHTML = '💾 Guardar'; btn.disabled = false; return; }
+  const filled = rows.filter(r => predictions[r.match_id]?.h !== '' && predictions[r.match_id]?.a !== '');
+  
+  if (!filled.length) { toast('No hay predicciones para guardar', 'err'); return; }
 
-  const { error } = await sb.from('predictions').upsert(rows, { onConflict: 'user_id,match_id' });
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled = true;
+
+  const { error } = await sb.from('predictions').upsert(filled, { onConflict: 'user_id,match_id' });
+  
   btn.innerHTML = '💾 Guardar';
   btn.disabled = false;
-  if (error) { toast('Error al guardar: ' + error.message, 'err'); return; }
-  toast('✅ Predicciones guardadas correctamente');
+  
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  toast(`✅ ${filled.length} predicción(es) guardada(s)`);
 }
 
 // =============================================
