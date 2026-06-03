@@ -940,14 +940,17 @@ async function loadAdminAds() {
 
 async function addAd() {
   const name = document.getElementById('ad-name').value.trim();
-  const price = parseInt(document.getElementById('ad-price').value) || 0;
+  const priceRaw = document.getElementById('ad-price').value.trim();
+  const price = parseInt(priceRaw);
   const orig = parseInt(document.getElementById('ad-orig').value) || null;
   const emoji = document.getElementById('ad-emoji').value.trim() || '📦';
   const cat = document.getElementById('ad-cat').value;
   const url = document.getElementById('ad-url').value.trim() || 'https://www.tiendakomet.com';
-  if (!name || !price) { toast('Ingresa nombre y precio', 'err'); return; }
-  await sb.from('ads').insert({ name, price, original_price: orig, emoji, category: cat, url });
-  toast('Anuncio agregado');
+  if (!name) { toast('Ingresa el nombre del producto', 'err'); return; }
+  if (!priceRaw || isNaN(price)) { toast('Ingresa un precio válido (solo números, sin decimales)', 'err'); return; }
+  const { error } = await sb.from('ads').insert({ name, price, original_price: orig, emoji, category: cat, url, is_active: true });
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  toast('✅ Anuncio agregado correctamente');
   ['ad-name','ad-price','ad-orig','ad-emoji','ad-url'].forEach(id => document.getElementById(id).value = '');
   loadAdminAds();
   loadAds();
