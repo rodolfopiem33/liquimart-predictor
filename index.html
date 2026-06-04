@@ -596,12 +596,27 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   btn.innerHTML = '<span class="spinner"></span> Entrando...';
   btn.disabled = true;
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false;
   btn.textContent = 'Entrar';
-  if (error) { toast('Correo o contraseña incorrectos', 'err'); return; }
+  if (error) {
+    const msg = (error.message || '').toLowerCase();
+    if (msg.includes('confirm')) {
+      toast('Debes confirmar tu correo. Revisa tu bandeja de entrada y spam.', 'err');
+    } else if (msg.includes('invalid')) {
+      toast('Correo o contraseña incorrectos', 'err');
+    } else {
+      toast('No se pudo iniciar sesión: ' + error.message, 'err');
+    }
+    return;
+  }
+  // Login exitoso: forzar carga de perfil y cambio de vista
+  if (data && data.user) {
+    currentUser = data.user;
+    profileLoaded = false;
+    await handleSignedIn();
+  }
 }
-
 async function doRegister() {
   const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
