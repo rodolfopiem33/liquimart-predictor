@@ -520,7 +520,19 @@ function showPage(page) {
   }
   if (page === 'admin') loadResultList();
 }
-
+async function loadConfig() {
+  const { data } = await sb.from('config').select('*');
+  if (!data) return;
+  data.forEach(row => {
+    if (row.key === 'pts_result') config.r = parseInt(row.value);
+    if (row.key === 'pts_exact_score') config.s = parseInt(row.value);
+    if (row.key === 'pts_ticket') config.t = parseInt(row.value);
+    if (row.key === 'pct_daily') config.d = parseInt(row.value);
+    if (row.key === 'pct_weekly') config.w = parseInt(row.value);
+    if (row.key === 'pct_groups') config.g = parseInt(row.value);
+    if (row.key === 'pct_champion') config.c = parseInt(row.value);
+  });
+}
 async function loadProfile() {
   let { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
 
