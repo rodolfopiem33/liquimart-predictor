@@ -178,6 +178,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     <button class="nav-tab active" onclick="nav('login',this)" id="tabLogin">Inicio</button>
     <button class="nav-tab" onclick="nav('quiniela',this)" id="tabQuiniela" style="display:none">Mis predicciones</button>
     <button class="nav-tab" onclick="nav('leaderboard',this)" id="tabLeaderboard" style="display:none">Tabla</button>
+    <button class="nav-tab" onclick="nav('resultados',this)" id="tabResultados" style="display:none">Resultados</button>
     <button class="nav-tab" id="adminTab" style="display:none;color:#1E40AF" onclick="nav('admin',this)">Admin</button>
   </div>
   <div class="nav-right">
@@ -303,6 +304,19 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     <div id="myCodesList"></div>
   </div>
   <p class="legal-note">Promoción comercial de LiquiMart · No afiliada con ninguna organización deportiva oficial · <a href="https://www.tiendakomet.com" target="_blank">tiendakomet.com</a></p>
+</div>
+
+<!-- ===== RESULTADOS ===== -->
+<div id="page-resultados" class="page">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
+    <div>
+      <h2 class="page-title">Resultados del torneo</h2>
+      <p class="page-sub">Marcadores oficiales de los partidos jugados</p>
+    </div>
+    <a href="https://www.google.com/search?q=resultados+mundial+futbol+2026+hoy" target="_blank" class="btn btn-primary btn-sm">⚽ Ver en vivo</a>
+  </div>
+  <div id="resultsList"><p style="color:var(--text2);font-size:13px;padding:.5rem">Cargando resultados...</p></div>
+  <div id="adSlot3" style="margin-top:1rem"></div>
 </div>
 
 <!-- ===== ADMIN ===== -->
@@ -486,9 +500,11 @@ async function handleSignedIn() {
   // Show nav tabs IMMEDIATELY - never depend on profile loading
   const tabQ = document.getElementById('tabQuiniela');
   const tabL = document.getElementById('tabLeaderboard');
+  const tabR = document.getElementById('tabResultados');
   const tabLogin = document.getElementById('tabLogin');
   if (tabQ) tabQ.style.display = 'inline-flex';
   if (tabL) tabL.style.display = 'inline-flex';
+  if (tabR) tabR.style.display = 'inline-flex';
   if (tabLogin) tabLogin.style.display = 'none';
   
   try {
@@ -654,6 +670,7 @@ async function doLogout() {
   cache = { matches: {}, leaderboard: null, leaderboardTime: 0 };
   document.getElementById('tabQuiniela').style.display = 'none';
   document.getElementById('tabLeaderboard').style.display = 'none';
+  document.getElementById('tabResultados').style.display = 'none';
   document.getElementById('tabLogin').style.display = 'inline-flex';
   document.getElementById('adminTab').style.display = 'none';
   await sb.auth.signOut();
@@ -909,6 +926,45 @@ function renderAd(slotId, page) {
 // =============================================
 // ADMIN — RESULTS
 // =============================================
+async function loadResults() {
+  const el = document.getElementById('resultsList');
+  const { data, error } = await sb.from('matches')
+    .select('*')
+    .eq('is_finished', true)
+    .order('match_date', { ascending: false })
+    .order('match_time', { ascending: false });
+
+  if (error) { el.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:.5rem">No se pudieron cargar los resultados.</p>'; return; }
+  if (!data || !data.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:2rem 1rem"><div style="font-size:32px;margin-bottom:.5rem">⚽</div><p style="font-weight:600;margin-bottom:.25rem">Aún no hay resultados</p><p style="color:var(--text2);font-size:13px">Los marcadores aparecerán aquí conforme se jueguen los partidos.</p></div>';
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  data.forEach(m => { (byDate[m.match_date] = byDate[m.match_date] || []).push(m); });
+
+  let html = '';
+  Object.keys(byDate).forEach(date => {
+    const dateStr = new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' });
+    html += `<div class="group-hdr">📅 ${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div>`;
+    byDate[date].forEach(m => {
+      const hWin = m.home_score > m.away_score;
+      const aWin = m.away_score > m.home_score;
+      html += `<div class="match-card">
+        <div class="match-meta">${m.group_name || ''}</div>
+        <div class="match-teams" style="flex:1">
+          <span style="font-weight:${hWin?'700':'500'}">${m.home_team}</span>
+          <span style="font-weight:800;font-size:16px;color:var(--green-dark);padding:0 8px">${m.home_score} - ${m.away_score}</span>
+          <span style="font-weight:${aWin?'700':'500'}">${m.away_team}</span>
+        </div>
+        <span class="badge badge-green" style="font-size:10px">Final</span>
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
 async function loadResultList() {
   const today = new Date().toISOString().split('T')[0];
   const { data } = await sb.from('matches').select('*').eq('match_date', today).order('match_time');
@@ -1204,6 +1260,7 @@ function nav(page, btn) {
       cache.leaderboardTime = now;
     }
   }
+  if (page === 'resultados') { loadResults(); renderAd('adSlot3', 'resultados'); }
   if (page === 'admin') loadResultList();
 }
 
