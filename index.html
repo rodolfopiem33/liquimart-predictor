@@ -717,31 +717,56 @@ async function loadLeaderboard() {
 // =============================================
 // ADS
 // =============================================
+let shopifyProducts = [];
+
 async function loadAds() {
-  const { data } = await sb.from('ads').select('*').eq('is_active', true);
-  ads = data || [];
+  try {
+    const page = Math.ceil(Math.random() * 3);
+    const res = await fetch('https://tiendakomet.com/products.json?limit=50&page=' + page);
+    const data = await res.json();
+    shopifyProducts = (data.products || []).filter(p =>
+      p.variants && p.variants.some(v => v.available)
+    );
+  } catch(e) {
+    shopifyProducts = [];
+  }
 }
 
 function renderAd(slotId, page) {
-  const pool = ads.filter(a => a.category === 'all' || a.category === page);
+  const slot = document.getElementById(slotId);
+  if (!slot) return;
+  if (!shopifyProducts.length) {
+    loadAds().then(() => renderAd(slotId, page));
+    return;
+  }
+  const pool = shopifyProducts.filter(p => p.variants && p.variants.some(v => v.available));
   if (!pool.length) return;
-  const ad = pool[Math.floor(Math.random() * pool.length)];
-  const pct = ad.original_price ? Math.round((1 - ad.price / ad.original_price) * 100) : 0;
-  document.getElementById(slotId).innerHTML = `
-    <div class="ad-card">
+  const product = pool[Math.floor(Math.random() * pool.length)];
+  const variant = product.variants.find(v => v.available) || product.variants[0];
+  const price = parseFloat(variant.price);
+  const comparePrice = parseFloat(variant.compare_at_price) || 0;
+  const pct = comparePrice > price ? Math.round((1 - price / comparePrice) * 100) : 0;
+  const img = product.images && product.images[0] ? product.images[0].src : null;
+  const url = 'https://tiendakomet.com/products/' + product.handle;
+  slot.innerHTML = `
+    <div class="ad-card" style="cursor:pointer" onclick="window.open('${url}','_blank')">
       <div class="ad-stripe"></div>
       <div style="position:absolute;top:6px;right:8px;font-size:10px;color:var(--text3)">Producto LiquiMart</div>
-      <div class="ad-img">${ad.emoji}</div>
+      ${img
+        ? `<img src="${img}" style="width:54px;height:54px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0">`
+        : `<div class="ad-img">🛍️</div>`
+      }
       <div class="ad-info">
         <div class="ad-label">Oferta en tienda</div>
-        <div class="ad-name">${ad.name}</div>
-        <div class="ad-price">$${ad.price.toLocaleString('es-MX')} MXN
-          ${ad.original_price ? `<span class="ad-orig">$${ad.original_price.toLocaleString('es-MX')}</span>` : ''}
+        <div class="ad-name">${product.title}</div>
+        <div class="ad-price">$${price.toLocaleString('es-MX')} MXN
+          ${comparePrice > price ? `<span class="ad-orig">$${comparePrice.toLocaleString('es-MX')}</span>` : ''}
           ${pct > 0 ? `<span class="badge badge-green" style="font-size:10px">-${pct}%</span>` : ''}
         </div>
       </div>
-      <a href="${ad.url}" target="_blank" class="btn btn-primary btn-sm">Ver oferta</a>
+      <a href="${url}" target="_blank" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">Ver oferta</a>
     </div>`;
+  setTimeout(() => renderAd(slotId, page), 30000);
 }
 
 // =============================================
