@@ -625,7 +625,6 @@ async function loadMatches(filter) {
 function filterMatches(f, btn) {
   document.querySelectorAll('#page-quiniela .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  cache.matches[f] = null;
   loadMatches(f);
   renderAd('adSlot1', 'quiniela');
 }
