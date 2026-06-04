@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LiquiMart — Predictor de Fútbol 2026</title>
 <meta name="description" content="Predice los marcadores del torneo de fútbol 2026 y gana descuentos exclusivos en LiquiMart.">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -17,13 +17,15 @@
   --shadow:0 1px 3px rgba(0,0,0,.08);
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+body.show-login-bg{background:linear-gradient(rgba(15,110,86,.93),rgba(15,110,86,.96)),url('crowd2.jpg') center/cover fixed}
 a{color:var(--green-dark);text-decoration:none}
 a:hover{text-decoration:underline}
 
 /* NAV */
 .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 .brand{display:flex;align-items:center;gap:10px}
-.brand-logo{background:var(--green);color:#fff;border-radius:var(--radius-sm);padding:5px 11px;font-size:15px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:5px}
+.brand-logo{background:var(--green);color:#fff;border-radius:var(--radius-sm);padding:5px 11px;font-size:15px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:6px}
+.brand-logo img{width:20px;height:20px}
 .brand-sub{font-size:12px;color:var(--text2);padding-left:10px;border-left:1px solid var(--border)}
 .nav-tabs{display:flex;gap:2px}
 .nav-tab{padding:6px 13px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-weight:500;transition:all .15s}
@@ -128,23 +130,27 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
 .data-row:last-child{border:none}
 
 /* HERO */
-.hero{background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);border-radius:var(--radius);padding:1.5rem;color:#fff;margin-bottom:1rem;position:relative;overflow:hidden;text-align:center}
-.hero::after{content:'⚽';position:absolute;right:1.5rem;top:50%;transform:translateY(-50%) rotate(15deg);font-size:56px;opacity:.12}
-.hero-title{font-size:17px;font-weight:700;margin-bottom:5px}
-.hero-sub{font-size:13px;opacity:.85}
-.hero-disclaimer{font-size:10px;opacity:.6;margin-top:8px}
+.hero{position:relative;border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.hero-bg{position:absolute;inset:0;background:url('stadium.jpg') center/cover}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(29,158,117,.82) 0%,rgba(15,110,86,.92) 100%)}
+.hero-inner{position:relative;padding:1.75rem 1.5rem 1.6rem;text-align:center;color:#fff}
+.hero-logo{width:74px;height:74px;margin:0 auto .5rem;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+.hero-title{font-size:21px;font-weight:800;margin-bottom:5px;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.hero-sub{font-size:13px;opacity:.95;text-shadow:0 1px 4px rgba(0,0,0,.25)}
+.hero-disclaimer{font-size:10px;opacity:.85;margin-top:10px;text-shadow:0 1px 3px rgba(0,0,0,.2)}
 
 /* PILLS */
 .pills{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.875rem}
-.pill{background:#fff;border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;display:flex;align-items:center;gap:4px}
-.pill-num{font-weight:700;color:var(--green-dark)}
+.pill{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:20px;padding:5px 13px;font-size:12px;display:flex;align-items:center;gap:4px}
+.pill-num{font-weight:800;color:#fff}
 
 /* TOAST */
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--green);color:#fff;padding:.75rem 1.25rem;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px}
 
 /* LOGIN */
-.login-wrap{max-width:400px;margin:2.5rem auto}
-.legal-note{font-size:11px;color:var(--text3);text-align:center;margin-top:.875rem;line-height:1.6}
+.login-wrap{max-width:400px;margin:2rem auto}
+.legal-note{font-size:11px;color:rgba(255,255,255,.75);text-align:center;margin-top:.875rem;line-height:1.6}
+.legal-note a{color:#fff;font-weight:600}
 
 /* SPINNER */
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -161,17 +167,17 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
 }
 </style>
 </head>
-<body>
+<body class="show-login-bg">
 
 <nav class="nav">
   <div class="brand">
-    <div class="brand-logo">⚡ LiquiMart</div>
+    <div class="brand-logo"><img src="logo.png" alt="">LiquiMart</div>
     <span class="brand-sub">Predictor de Fútbol</span>
   </div>
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" onclick="nav('login',this)" id="tabLogin">Inicio</button>
-<button class="nav-tab" onclick="nav('quiniela',this)" id="tabQuiniela" style="display:none">Mis predicciones</button>
-<button class="nav-tab" onclick="nav('leaderboard',this)" id="tabLeaderboard" style="display:none">Tabla</button>
+    <button class="nav-tab" onclick="nav('quiniela',this)" id="tabQuiniela" style="display:none">Mis predicciones</button>
+    <button class="nav-tab" onclick="nav('leaderboard',this)" id="tabLeaderboard" style="display:none">Tabla</button>
     <button class="nav-tab" id="adminTab" style="display:none;color:#1E40AF" onclick="nav('admin',this)">Admin</button>
   </div>
   <div class="nav-right">
@@ -189,9 +195,14 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
 <div id="page-login" class="page active">
   <div class="login-wrap">
     <div class="hero">
-      <div class="hero-title">Predictor de Fútbol LiquiMart</div>
-      <div class="hero-sub">Adivina los marcadores y gana descuentos exclusivos</div>
-      <div class="hero-disclaimer">Promoción independiente · No afiliada con ninguna organización deportiva oficial</div>
+      <div class="hero-bg"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-inner">
+        <img class="hero-logo" src="logo.png" alt="LiquiMart">
+        <div class="hero-title">Predictor de Fútbol LiquiMart</div>
+        <div class="hero-sub">Adivina los marcadores y gana descuentos exclusivos</div>
+        <div class="hero-disclaimer">Promoción independiente · No afiliada con ninguna organización deportiva oficial</div>
+      </div>
     </div>
     <div class="card">
       <div id="loginForm">
@@ -241,7 +252,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     </div>
     <p style="font-size:12px;color:var(--green-dark);margin-bottom:.75rem">Ingresa el folio de tu ticket para ganar <strong id="ticket-pts">5</strong> puntos adicionales</p>
     <div style="display:flex;gap:.5rem">
-      <input type="text" id="ticketFolio" placeholder="Ej: #325477" style="flex:1">
+      <input type="text" id="ticketFolio" placeholder="Ej: TKT-2026-0091" style="flex:1">
       <button class="btn btn-primary btn-sm" onclick="submitTicket()">Agregar</button>
     </div>
     <p style="font-size:11px;color:var(--green-dark);margin-top:.375rem">* Cada folio solo puede usarse una vez. El equipo lo verifica en 24hrs.</p>
@@ -389,22 +400,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
         </div>
         <div class="field-row">
           <div class="field"><label>Precio original MXN</label><input type="number" id="ad-orig" placeholder="2499"></div>
-          <div class="field"><label>Ícono</label>
-<select id="ad-emoji">
-<option value="📦">📦 General</option>
-<option value="📺">📺 Pantallas/TV</option>
-<option value="🔊">🔊 Audio/Bocinas</option>
-<option value="💻">💻 Cómputo</option>
-<option value="📱">📱 Celulares</option>
-<option value="🎮">🎮 Videojuegos</option>
-<option value="📶">📶 Redes/WiFi</option>
-<option value="🍳">🍳 Cocina</option>
-<option value="🥤">🥤 Licuadoras</option>
-<option value="❄️">❄️ Refrigeración</option>
-<option value="🔌">🔌 Electrónica</option>
-<option value="🏠">🏠 Hogar</option>
-</select>
-</div>
+          <div class="field"><label>Emoji</label><input type="text" id="ad-emoji" placeholder="📺" style="font-size:18px"></div>
         </div>
         <div class="field-row">
           <div class="field"><label>Mostrar en</label>
@@ -435,8 +431,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // =============================================
 // STATE
 // =============================================
-let authBusy = false;
-let profileLoaded = false;
 let currentUser = null;
 let currentProfile = null;
 let matches = [];
@@ -447,13 +441,18 @@ let ads = [];
 // =============================================
 // INIT
 // =============================================
+let authBusy = false;        // prevents overlapping auth handling
+let profileLoaded = false;   // prevents double profile loads for same session
+
 async function init() {
+  document.body.classList.add('show-login-bg');
   await loadConfig();
   updatePills();
 
   // Listen for auth changes FIRST so we never miss an event
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
+      // Avoid re-handling the same signed-in user twice
       if (currentUser && currentUser.id === session.user.id && profileLoaded) return;
       currentUser = session.user;
       await handleSignedIn();
@@ -468,6 +467,7 @@ async function init() {
     }
   });
 
+  // Check for an existing session on load
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
@@ -482,7 +482,7 @@ async function init() {
 async function handleSignedIn() {
   if (authBusy) return;
   authBusy = true;
-
+  
   // Show nav tabs IMMEDIATELY - never depend on profile loading
   const tabQ = document.getElementById('tabQuiniela');
   const tabL = document.getElementById('tabLeaderboard');
@@ -490,20 +490,22 @@ async function handleSignedIn() {
   if (tabQ) tabQ.style.display = 'inline-flex';
   if (tabL) tabL.style.display = 'inline-flex';
   if (tabLogin) tabLogin.style.display = 'none';
-
+  
   try {
     await loadProfile();
     profileLoaded = true;
   } catch (e) {
     console.error('Error loading profile', e);
+    // Even if profile fails, user is still logged in - show fallback
     const fallback = { name: currentUser.email.split('@')[0], points: 0, is_admin: false };
     updateNavUser(fallback);
   }
-
+  
+  // Go to predictions view
   showPage('quiniela');
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   if (tabQ) tabQ.classList.add('active');
-
+  
   authBusy = false;
 }
 
@@ -514,10 +516,14 @@ function goToLogin() {
   if (lTab) lTab.classList.add('active');
 }
 
+// Switch the visible page without the auth guard in nav()
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + page);
   if (target) target.classList.add('active');
+  // Show photo background only on login page
+  if (page === 'login') document.body.classList.add('show-login-bg');
+  else document.body.classList.remove('show-login-bg');
   if (page === 'quiniela') {
     renderAd('adSlot1', 'quiniela');
     loadMatches('today');
@@ -528,6 +534,7 @@ function showPage(page) {
   }
   if (page === 'admin') loadResultList();
 }
+
 async function loadConfig() {
   const { data } = await sb.from('config').select('*');
   if (!data) return;
@@ -541,9 +548,12 @@ async function loadConfig() {
     if (row.key === 'pct_champion') config.c = parseInt(row.value);
   });
 }
-async function loadProfile() {
-  let { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
 
+async function loadProfile() {
+  // Use maybeSingle so a missing row doesn't throw
+  let { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+  
+  // If no profile exists yet (trigger may not have run), create one
   if (!data && !error) {
     const name = currentUser.user_metadata?.name || currentUser.email.split('@')[0];
     const { data: created } = await sb.from('profiles')
@@ -552,13 +562,14 @@ async function loadProfile() {
       .maybeSingle();
     data = created;
   }
-
+  
   if (data) {
     currentProfile = data;
     updateNavUser(data);
     if (data.is_admin) document.getElementById('adminTab').style.display = 'inline-flex';
     loadAds();
   } else {
+    // Fallback: still show the user as logged in using auth data
     const fallback = { name: currentUser.email.split('@')[0], points: 0, is_admin: false };
     currentProfile = fallback;
     updateNavUser(fallback);
@@ -573,6 +584,10 @@ function updateNavUser(profile) {
   document.getElementById('userAvatar').textContent = profile.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('userName').textContent = profile.name.split(' ')[0];
   document.getElementById('userPts').textContent = profile.points + ' pts';
+  // Show nav tabs
+  document.getElementById('tabQuiniela').style.display = 'inline-flex';
+  document.getElementById('tabLeaderboard').style.display = 'inline-flex';
+  document.getElementById('tabLogin').style.display = 'none';
 }
 
 function updatePills() {
@@ -604,7 +619,7 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   btn.innerHTML = '<span class="spinner"></span> Entrando...';
   btn.disabled = true;
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false;
   btn.textContent = 'Entrar';
   if (error) {
@@ -618,13 +633,8 @@ async function doLogin() {
     }
     return;
   }
-  // Login exitoso: forzar carga de perfil y cambio de vista
-  if (data && data.user) {
-    currentUser = data.user;
-    profileLoaded = false;
-    await handleSignedIn();
-  }
 }
+
 async function doRegister() {
   const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
@@ -708,6 +718,41 @@ async function loadMatches(filter) {
       predictions[mid][inp.dataset.side] = inp.value;
     });
   });
+  
+  // Cache the loaded data
+  cache.matches[filter] = { matches: data, predictions: { ...predictions } };
+}
+
+function renderMatchList(data, preds) {
+  const el = document.getElementById('matchList');
+  const groups = [...new Set(data.map(m => m.group_name))];
+  let html = '';
+  groups.forEach(g => {
+    html += `<div class="group-hdr">📋 Grupo ${g}</div>`;
+    data.filter(m => m.group_name === g).forEach(m => {
+      const pred = preds[m.id] || { h: '', a: '' };
+      const locked = m.is_locked || m.is_finished;
+      const dateStr = new Date(m.match_date + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric',month:'short'});
+      html += `<div class="match-card ${locked ? 'match-locked' : ''}">
+        <div class="match-meta">${dateStr} ${m.match_time.slice(0,5)}</div>
+        <div class="match-teams"><span>${m.home_team}</span><span class="match-vs">vs</span><span>${m.away_team}</span></div>
+        ${locked
+          ? `<span class="lock-badge">🔒 ${m.is_finished && m.home_score !== null ? m.home_score+'-'+m.away_score : 'En curso'}</span>`
+          : `<input class="score-inp" type="number" min="0" max="20" placeholder="0" value="${pred.h}" data-mid="${m.id}" data-side="h">
+             <span class="match-vs">-</span>
+             <input class="score-inp" type="number" min="0" max="20" placeholder="0" value="${pred.a}" data-mid="${m.id}" data-side="a">`
+        }
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.score-inp').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const mid = parseInt(inp.dataset.mid);
+      if (!predictions[mid]) predictions[mid] = { h: '', a: '' };
+      predictions[mid][inp.dataset.side] = inp.value;
+    });
+  });
 }
 
 function filterMatches(f, btn) {
@@ -720,32 +765,25 @@ function filterMatches(f, btn) {
 async function savePredictions() {
   if (!currentUser) { toast('Inicia sesión primero', 'err'); return; }
   const btn = document.getElementById('saveBtn');
-  
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled = true;
+
   const rows = Object.entries(predictions)
-    .filter(([, v]) => v.h !== '' && v.a !== '' && v.h !== '0' || v.h === '0' && v.a !== '' || v.h !== '' && v.a === '0')
-    .filter(([, v]) => v.h !== '' || v.a !== '')
+    .filter(([, v]) => v.h !== '' && v.a !== '')
     .map(([mid, v]) => ({
       user_id: currentUser.id,
       match_id: parseInt(mid),
       home_pred: parseInt(v.h) || 0,
       away_pred: parseInt(v.a) || 0
-    }))
-    .filter(r => !isNaN(r.match_id));
+    }));
 
-  const filled = rows.filter(r => predictions[r.match_id]?.h !== '' && predictions[r.match_id]?.a !== '');
-  
-  if (!filled.length) { toast('No hay predicciones para guardar', 'err'); return; }
+  if (!rows.length) { toast('No hay predicciones para guardar', 'err'); btn.innerHTML = '💾 Guardar'; btn.disabled = false; return; }
 
-  btn.innerHTML = '<span class="spinner"></span> Guardando...';
-  btn.disabled = true;
-
-  const { error } = await sb.from('predictions').upsert(filled, { onConflict: 'user_id,match_id' });
-  
+  const { error } = await sb.from('predictions').upsert(rows, { onConflict: 'user_id,match_id' });
   btn.innerHTML = '💾 Guardar';
   btn.disabled = false;
-  
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast(`✅ ${filled.length} predicción(es) guardada(s)`);
+  if (error) { toast('Error al guardar: ' + error.message, 'err'); return; }
+  toast('✅ Predicciones guardadas correctamente');
 }
 
 // =============================================
@@ -814,12 +852,12 @@ let shopifyProducts = [];
 
 async function loadAds() {
   try {
-    const page = Math.ceil(Math.random() * 3);
-    const res = await fetch('https://tiendakomet.com/products.json?limit=50&page=' + page);
+    const res = await fetch('https://tiendakomet.com/products.json?limit=50&page=' + Math.ceil(Math.random()*3));
     const data = await res.json();
-    shopifyProducts = (data.products || []).filter(p =>
-      p.variants && p.variants.some(v => v.available)
-    );
+    shopifyProducts = (data.products || []).filter(p => {
+      const available = p.variants && p.variants.some(v => v.available);
+      return available && p.status !== 'archived';
+    });
   } catch(e) {
     shopifyProducts = [];
   }
@@ -828,24 +866,28 @@ async function loadAds() {
 function renderAd(slotId, page) {
   const slot = document.getElementById(slotId);
   if (!slot) return;
+  
   if (!shopifyProducts.length) {
     loadAds().then(() => renderAd(slotId, page));
     return;
   }
+  
   const pool = shopifyProducts.filter(p => p.variants && p.variants.some(v => v.available));
   if (!pool.length) return;
+  
   const product = pool[Math.floor(Math.random() * pool.length)];
   const variant = product.variants.find(v => v.available) || product.variants[0];
   const price = parseFloat(variant.price);
   const comparePrice = parseFloat(variant.compare_at_price) || 0;
-  const pct = comparePrice > price ? Math.round((1 - price / comparePrice) * 100) : 0;
+  const pct = comparePrice > price ? Math.round((1 - price/comparePrice) * 100) : 0;
   const img = product.images && product.images[0] ? product.images[0].src : null;
   const url = 'https://tiendakomet.com/products/' + product.handle;
+  
   slot.innerHTML = `
     <div class="ad-card" style="cursor:pointer" onclick="window.open('${url}','_blank')">
       <div class="ad-stripe"></div>
       <div style="position:absolute;top:6px;right:8px;font-size:10px;color:var(--text3)">Producto LiquiMart</div>
-      ${img
+      ${img 
         ? `<img src="${img}" style="width:54px;height:54px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0">`
         : `<div class="ad-img">🛍️</div>`
       }
@@ -859,6 +901,8 @@ function renderAd(slotId, page) {
       </div>
       <a href="${url}" target="_blank" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">Ver oferta</a>
     </div>`;
+    
+  // Rotate ad every 30 seconds
   setTimeout(() => renderAd(slotId, page), 30000);
 }
 
@@ -929,7 +973,27 @@ async function processResults() {
     const code = 'LIQM-' + top.name.split(' ')[0].toUpperCase().slice(0,6) + '-D-' + Math.random().toString(36).substr(2,5).toUpperCase();
     const expires = new Date(Date.now() + 48*60*60*1000).toISOString();
     await sb.from('discount_codes').insert({ code, user_id: top.id, prize_type: 'daily', discount_pct: config.d, expires_at: expires });
+    // Build email summary for Nataly
+    const emailBody = `Hola Nataly,%0A%0AResumen de descuentos del día ${new Date().toLocaleDateString('es-MX')}:%0A%0ACódigo: ${code}%0AUsuario: ${top.name} (${top.email || ''})%0ADescuento: ${config.d}% off%0AExpira: en 48hrs%0A%0APor favor crea este cupón en Shopify Admin > Discounts > Create discount code.%0A%0ASaludos`;
+    const mailtoLink = `mailto:nataly@tiendakomet.com?subject=Cupones del día - LiquiMart Predictor&body=${emailBody}`;
+    
     toast(`✅ Puntos calculados. Código ${config.d}% emitido para ${top.name}`);
+    
+    // Show email button
+    setTimeout(() => {
+      const existing = document.getElementById('emailNatalyBtn');
+      if (!existing) {
+        const btn = document.createElement('a');
+        btn.id = 'emailNatalyBtn';
+        btn.href = mailtoLink;
+        btn.target = '_blank';
+        btn.className = 'btn btn-primary';
+        btn.style = 'margin-top:.75rem;display:inline-flex';
+        btn.innerHTML = '📧 Enviar códigos del día a Nataly';
+        document.getElementById('adm-results').querySelector('.card').appendChild(btn);
+      }
+    }, 500);
+    
   } else {
     toast('Puntos calculados correctamente');
   }
@@ -1105,15 +1169,49 @@ async function deleteAd(id) {
 // =============================================
 // NAVIGATION
 // =============================================
+// Cache to avoid reloading on every tab switch
+let cache = { matches: {}, leaderboard: null, leaderboardTime: 0 };
+
 function nav(page, btn) {
+  // Block navigation if not logged in
+  if (!currentUser && page !== 'login') {
+    toast('Inicia sesión para continuar', 'err');
+    return;
+  }
+  
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  if (page === 'login') document.body.classList.add('show-login-bg');
+  else document.body.classList.remove('show-login-bg');
 
-  if (page === 'quiniela') { loadMatches('today'); renderAd('adSlot1', 'quiniela'); }
-  if (page === 'leaderboard') { loadLeaderboard(); renderAd('adSlot2', 'leaderboard'); }
+  if (page === 'quiniela') {
+    renderAd('adSlot1', 'quiniela');
+    // Only reload if no cache
+    if (!cache.matches['today']) {
+      loadMatches('today');
+    } else {
+      renderMatchesFromCache('today');
+    }
+  }
+  if (page === 'leaderboard') {
+    renderAd('adSlot2', 'leaderboard');
+    // Reload leaderboard max once per 60 seconds
+    const now = Date.now();
+    if (now - cache.leaderboardTime > 60000) {
+      loadLeaderboard();
+      cache.leaderboardTime = now;
+    }
+  }
   if (page === 'admin') loadResultList();
+}
+
+function renderMatchesFromCache(filter) {
+  const cached = cache.matches[filter];
+  if (!cached) { loadMatches(filter); return; }
+  // Re-render from cached data without hitting Supabase
+  renderMatchList(cached.matches, cached.predictions);
 }
 
 function adminTab(tab, btn) {
