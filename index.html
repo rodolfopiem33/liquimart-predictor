@@ -553,6 +553,11 @@ async function doRegister() {
 }
 
 async function doLogout() {
+  cache = { matches: {}, leaderboard: null, leaderboardTime: 0 };
+  document.getElementById('tabQuiniela').style.display = 'none';
+  document.getElementById('tabLeaderboard').style.display = 'none';
+  document.getElementById('tabLogin').style.display = 'inline-flex';
+  document.getElementById('adminTab').style.display = 'none';
   await sb.auth.signOut();
 }
 
