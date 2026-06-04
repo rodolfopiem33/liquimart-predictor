@@ -169,9 +169,9 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     <span class="brand-sub">Predictor de Fútbol</span>
   </div>
   <div class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" onclick="nav('login',this)">Inicio</button>
-    <button class="nav-tab" onclick="nav('quiniela',this)">Mis predicciones</button>
-    <button class="nav-tab" onclick="nav('leaderboard',this)">Tabla</button>
+    <button class="nav-tab active" onclick="nav('login',this)" id="tabLogin">Inicio</button>
+<button class="nav-tab" onclick="nav('quiniela',this)" id="tabQuiniela" style="display:none">Mis predicciones</button>
+<button class="nav-tab" onclick="nav('leaderboard',this)" id="tabLeaderboard" style="display:none">Tabla</button>
     <button class="nav-tab" id="adminTab" style="display:none;color:#1E40AF" onclick="nav('admin',this)">Admin</button>
   </div>
   <div class="nav-right">
